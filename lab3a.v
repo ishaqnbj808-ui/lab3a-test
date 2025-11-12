@@ -1,67 +1,49 @@
 module lab3a (
-    // Inputs for the Sequential Logic
-    input clk, 
-    input rst, // Renamed 'reset' to 'rst' to match template
-    input ld,  // Renamed 'load' to 'ld' to match template
-    
-    // Inputs for the Adder
-    input cin,
-    input [7:0] a, b,
-    
-    // Registered Outputs (7-bit wide)
-    output [6:0] d2, d1, d0
+    input clk,            // clock input
+    input reset_n,        // active low reset
+    input load_n,         // active low load
+    input [7:0] a, b,     // 8-bit inputs
+    input cin,            // carry-in
+    output [3:0] reg_sum, // registered sum
+    output [4:0] reg_cs   // registered carry+sum
 );
 
-// Wires to hold the combinational 8-bit result from the lab2c module
-    wire [7:0] comb_d2, comb_d1, comb_d0;
+    // Wires for connection between adder and registers
+    wire [7:0] d2, d1, d0;
+    wire [3:0] sum4;
+    wire cout;
 
+    // instantiate the adder from Lab2C
+    lab2c adder8 (
+        .a(a),
+        .b(b),
+        .cin(cin),
+        .d2(d2),
+        .d1(d1),
+        .d0(d0)
+    );
 
-// --- 1. Instantiate the Combinational Adder Core (lab2c) ---
+    // Use lower nibble of d0 as 4-bit sum
+    assign sum4 = d0[3:0];
 
-// lab2c calculates the current 8-bit sum (comb_d*) based on inputs a, b, cin
-// NOTE: Ensure your existing lab2c module outputs are [7:0] as previously used.
-lab2c adder_core (
-    .a(a), 
-    .b(b),
-    .cin(cin),
-    // Outputs are 8-bit wires
-    .d2(comb_d2), 
-    .d1(comb_d1), 
-    .d0(comb_d0)
-);
+    // Assume MSB of d1 or another signal gives carry (adjust if needed)
+    assign cout = d1[0];  // <— change if your lab2b defines carry differently
 
+    // Instantiate registers
+    reg4bit r4 (
+        .clk(clk),
+        .reset_n(reset_n),
+        .load_n(load_n),
+        .d(sum4),
+        .q(reg_sum)
+    );
 
-// --- 2. Instantiate the 7-bit Loadable Registers ---
-
-// Register for D0 (7-bit output)
-loadable_register_7bit reg_d0_inst (
-    .clk(clk),
-    .reset(rst),
-    .load(ld),
-    .d_in(comb_d0), 
-    .q(d0) // Directly connect to the output port
-);
-
-// Register for D1 (7-bit output)
-loadable_register_7bit reg_d1_inst (
-    .clk(clk),
-    .reset(rst),
-    .load(ld),
-    .d_in(comb_d1), 
-    .q(d1) // Directly connect to the output port
-);
-
-// Register for D2 (7-bit output)
-loadable_register_7bit reg_d2_inst (
-    .clk(clk),
-    .reset(rst),
-    .load(ld),
-    .d_in(comb_d2), 
-    .q(d2) // Directly connect to the output port
-);
-
-// No explicit 'assign' statements needed for d0, d1, d2 since they are driven 
-// directly by the register outputs 'q' and are declared as 'output' in the header.
-
+    reg5bit r5 (
+        .clk(clk),
+        .reset_n(reset_n),
+        .load_n(load_n),
+        .d({cout, sum4}),
+        .q(reg_cs)
+    );
 
 endmodule
