@@ -13,7 +13,7 @@ module lab3a (
 );
 
 // Wires to hold the combinational 8-bit result from the lab2c module
-wire [7:0] comb_d2, comb_d1, comb_d0;
+    wire [7:0] comb_d2, comb_d1, comb_d0;
 
 
 // --- 1. Instantiate the Combinational Adder Core (lab2c) ---
@@ -62,5 +62,6 @@ loadable_register_7bit reg_d2_inst (
 
 // No explicit 'assign' statements needed for d0, d1, d2 since they are driven 
 // directly by the register outputs 'q' and are declared as 'output' in the header.
+
 
 endmodule
